@@ -1,30 +1,29 @@
 
 # coding: utf-8
 
-# In[1062]:
+# In[1207]:
 
 
+# imports
 import numpy as np
 import pandas as pd
-#import seaborn as sb
 import matplotlib.pyplot as plt
-#from sklearn.metrics import confusion_matrix #Confusion matrix
 from sklearn.cross_validation import train_test_split
-#from pandas.tools.plotting import parallel_coordinates
 from scipy import optimize as op
 from sklearn.linear_model import LogisticRegression
 
 
-# In[1063]:
+# In[1221]:
 
 
+# getting the data from the file
 import os  
 path = os.getcwd() + '/owlsNumLabels.csv'  
 data = pd.read_csv(path, sep="," ,header=None, names=['body-length','wing-length', 'body-width','wing-width' , 'type'])
 data.head()
 
 
-# In[1064]:
+# In[1209]:
 
 
 labels=["LongEaredOwl","SnowyOwl","BarnOwl"]
@@ -37,12 +36,12 @@ def returnLabelString(number):
     return labels[number]
 
 
-# In[1065]:
+# In[1210]:
 
 
 # data manipulation
 LABELS=[0,1,2]
-Lambda=0.001 # lambda = the learning rate
+Lambda=0.01 # lambda = the learning rate
 
 numColumns = data.shape[1]
 
@@ -72,7 +71,7 @@ for j in range(n):
     X[:, j+1] = (X[:, j+1] - X[:,j+1].mean())/(X[:,j+1].std())
 
 
-# In[1066]:
+# In[1211]:
 
 
 # the sigmoid function
@@ -80,7 +79,7 @@ def sigmoid(z):
     return 1/(1+np.exp(-z))
 
 
-# In[1067]:
+# In[1212]:
 
 
 # function takes in two lists, compares the values and outputs the accuracy at which they are similar
@@ -96,7 +95,7 @@ def calculateAccuracy(predicted, actual):
     return tot # return the accuracy
 
 
-# In[1068]:
+# In[1213]:
 
 
 #Logistic regression cost function
@@ -111,7 +110,7 @@ def Cost(theta, X, y):
     # return the value produced by the equation
 
 
-# In[1069]:
+# In[1214]:
 
 
 # Gradient Descent 
@@ -123,22 +122,23 @@ def Gradient(theta, X, y):
     hTheta = sigmoid(X.dot(theta)) # # probability y=1: given that its parameterised by theta
     tc = np.copy(theta) # tc= theta copy
     tc[0]=0 # we dont regularize theta[0] as its used as a bias term
+    grad=((1/m) * X.T.dot(hTheta-y)) + ((Lambda/m)*tc)# calculate the gradient
     
-    return ((1/m) * X.T.dot(hTheta-y)) + ((Lambda/m)*tc) # return the value produced by the equation
+    return grad # return the gradient
 
 
-# In[1070]:
+# In[1215]:
 
 
 import scipy.optimize as opt  
 #Optimal theta 
 def logisticRegression(X, y, theta):
     result = opt.fmin_tnc(func=Cost, x0=theta, fprime=Gradient, args=(X, y)) 
-    
+
     return result[0]
 
 
-# In[1071]:
+# In[1216]:
 
 
 # funciton which returns the mean of an input list
@@ -147,7 +147,7 @@ def getMean(lst):
     return sum(lst)/len(lst)
 
 
-# In[1072]:
+# In[1217]:
 
 
 f = open('LogisticOutput.txt','w') # file the output will be wrote to
@@ -180,7 +180,7 @@ for j in range(numFolds):
     Probabilities = sigmoid(X_test.dot(all_theta.T)) #probability that eacy is 1, for each label
     predicts = [LABELS[np.argmax(Probabilities[i, :])] for i in range(X_test.shape[0])]# get the prediction(highest value[0,1,2]) for each sample
         
-    acc=calculateAccuracy(y_test, p)
+    acc=calculateAccuracy(y_test, predicts)
     scores.append(acc*100)
     
     for i in range(X_test.shape[0]):
@@ -218,5 +218,5 @@ f.write("\nBest Accuracy was iteration number %d, with %f Accuracy " %(indexHsk,
 f.write("\nWorst Accuracy was iteration number %d, with %f Accuracy " %(indexLsk,lowestSK))
 f.write("\n"+"Average Accuracy = %f (Percent) +/- %f (Percent)"  %(skMean,avgDiffSk))
 
-f.close()
+f.close()# close the file
 
